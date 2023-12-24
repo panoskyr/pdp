@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa,utils
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.hashes import SHA256
 import random
-
+from sympy import isprime
 def rsa_keygen(key_size=512):
     private_key=rsa.generate_private_key(
         public_exponent=65537,
@@ -27,8 +27,6 @@ def rsa_keygen(key_size=512):
     N_public_modulus=public_key.public_numbers().n
     d_private_exponent=private_key.private_numbers().d
     e_public_exponent=65537
-    # u is random secret number
-    u=954867
     # it holds that e*d congruent to 1mod(phi(n)) equal to (p-1)*(q-1)
    
     # print(e)
@@ -37,14 +35,19 @@ def rsa_keygen(key_size=512):
     # return pk,sk
     p_tonos=int((p_prime-1)/2)
     q_tonos=int((q_prime-1)/2)
-    m=p_tonos*q_tonos
-    print(type(m))
-    e=pow(d_private_exponent,-1,m)
-    return (e,d_private_exponent, m)
+    pq_tonos=p_tonos*q_tonos
+    # e=pow(d_private_exponent,-1,pq_tonos)
+    # print(isprime(e))
+    # return N_public_modulus, e,d_private_exponent, p_prime,q_prime
+    return N_public_modulus,p_prime,q_prime,d_private_exponent, pq_tonos
+
 def keygen(key_size):
-    g=find_g()
-    N,sk=rsa_keygen(key_size)
-    return (N,g), sk
+    # v is a secret random number
+    v=83764532362
+    N_public_modulus,e_secret,d_private_exponent, p, q=rsa_keygen(key_size)
+    g=find_g(p,q,N_public_modulus)
+    
+    return (N_public_modulus,g), (e_secret,d_private_exponent,v)
 
 def is_ok_number(a, p, q):
     aModp=a % p
@@ -63,15 +66,15 @@ def is_ok_number(a, p, q):
     return True
 
 
-def find_a(p,q,upto=1000):
+def find_a(p,q,N,upto=1000):
     for _ in range(upto):
         a=random.randrange(1,N+1)
         if ( is_ok_number(a,p=p,q=q) ):
             return a 
     return -1
 
-def find_g():
-    a=find_a()
+def find_g(p,q,N):
+    a=find_a(p,q,N)
     if a!=-1:
         return a^2
     else:
@@ -83,10 +86,24 @@ def h(message):
 
 
 
+def find_e():
+    while True:
+        N_public_modulus,p,q,d_private_exponent, pq_tonos= rsa_keygen(512)
+        try :
+            e=pow(d_private_exponent,-1, pq_tonos)
+            if isprime(e):
+                g=find_g(p,q,N_public_modulus)
+                v=83764532362
+                print( "Found")
+                #end loop when suitable e is found
+                break
+        # raised when it is not invertible
+        except ValueError:
+            continue
+        
+find_e()
 
-e,d,z=rsa_keygen()
-print((e*d)%z)
-print(e,d,z)
+
 
     
 
