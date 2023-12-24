@@ -1,8 +1,9 @@
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import rsa,utils
 from cryptography.hazmat.primitives import serialization
-import os
+from cryptography.hazmat.primitives.hashes import SHA256
+import random
 
-def keygen(key_size):
+def rsa_keygen(key_size=512):
     private_key=rsa.generate_private_key(
         public_exponent=65537,
         key_size=key_size
@@ -19,16 +20,32 @@ def keygen(key_size):
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    # print(public_key.public_numbers().n)
 
-    p=private_key.private_numbers().p
-    q=private_key.private_numbers().q
-    N=public_key.public_numbers().n
-    # print(int.from_bytes(os.urandom(16), byteorder='big'))
-    return (N, p, q)
 
-    
-keygen(512)
+    p_prime=private_key.private_numbers().p
+    q_prime=private_key.private_numbers().q
+    N_public_modulus=public_key.public_numbers().n
+    d_private_exponent=private_key.private_numbers().d
+    e_public_exponent=65537
+    # u is random secret number
+    u=954867
+    # it holds that e*d congruent to 1mod(phi(n)) equal to (p-1)*(q-1)
+   
+    # print(e)
+    # pk=(N)
+    # sk=(e, d_private_exponent,u)
+    # return pk,sk
+    p_tonos=int((p_prime-1)/2)
+    q_tonos=int((q_prime-1)/2)
+    m=p_tonos*q_tonos
+    print(type(m))
+    e=pow(d_private_exponent,-1,m)
+    return (e,d_private_exponent, m)
+def keygen(key_size):
+    g=find_g()
+    N,sk=rsa_keygen(key_size)
+    return (N,g), sk
+
 def is_ok_number(a, p, q):
     aModp=a % p
 
@@ -46,6 +63,32 @@ def is_ok_number(a, p, q):
     return True
 
 
+def find_a(p,q,upto=1000):
+    for _ in range(upto):
+        a=random.randrange(1,N+1)
+        if ( is_ok_number(a,p=p,q=q) ):
+            return a 
+    return -1
+
+def find_g():
+    a=find_a()
+    if a!=-1:
+        return a^2
+    else:
+        return "No g found"
+    
+
+def h(message):
+    return SHA256(message)
+
+
+
+
+e,d,z=rsa_keygen()
+print((e*d)%z)
+print(e,d,z)
+
+    
 
 
 
