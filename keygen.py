@@ -157,13 +157,20 @@ def tagfile(file_to_tag,number_of_blocks,sk,pk):
     with open(file_to_tag, "r") as file:
         data=file.read()
     block_size=len(data) // number_of_blocks
+    tags=[]
+    block_nums=[]
     for block_num in range(number_of_blocks):
         start_idx=block_num*block_size
         # if we are at the last block go to the end of the file.
         end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len(file_to_tag)
         
         print(block_num, "\n")
-        tagblock(sk,pk,data[start_idx:end_idx], block_num)
+        tags.append(tagblock(sk,pk,data[start_idx:end_idx], block_num))
+        block_nums.append(block_num)
+        with open("tags.txt", "w") as f:
+            for block_num, tag in zip(block_nums, tags):
+                f.write(f"{block_num}:{tag}\n")
+            
 
 def tagblock(sk,pk,block,i):
     # T_i=(h(w_i) * g ^ block)^ d modn
@@ -177,10 +184,9 @@ def tagblock(sk,pk,block,i):
     g_comp=pow(base=g,exp=(to_digit(block)*d),mod=N)
     w_comp=pow(base=int.from_bytes(h(w_i),byteorder='big'),exp=d, mod=N)
     tag=pow(w_comp*g_comp,1 ,N)
+    return tag
     
-
+def 
     
 pk,sk=get_keys()
 tagfile("random_text.txt",500,sk,pk)
-
-
