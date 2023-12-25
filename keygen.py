@@ -3,6 +3,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.hashes import SHA256
 import random
 from sympy import isprime
+import string
+import lorem
 def rsa_keygen(key_size=512):
     private_key=rsa.generate_private_key(
         public_exponent=65537,
@@ -95,15 +97,54 @@ def find_e():
                 g=find_g(p,q,N_public_modulus)
                 v=83764532362
                 print( "Found")
+                with open("file.txt", "w") as f:
+                    f.write("N:"+str(N_public_modulus)+"\n")
+                    f.write("g:"+ str(g)+"\n")
+                    f.write("e:"+str(e)+"\n")
+                    f.write("d:"+str( d_private_exponent)+"\n")
+                    f.write("v:"+ str(v)+"\n")
+
+
+
                 #end loop when suitable e is found
                 break
         # raised when it is not invertible
         except ValueError:
             continue
-        
-find_e()
+def load_keys(filename="file.txt"):
+    data = {}
+    with open(filename, "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        key, value = line.strip().split(":")
+        data[key] = value
+
+    return data
+
+def get_keys():
 
 
+    loaded_data = load_keys()
+
+    N_public_modulus= int(loaded_data["N"])
+    g = int(loaded_data["g"])
+    e = int(loaded_data["e"])
+    d_private_exponent = int(loaded_data["d"])
+    v = int(loaded_data["v"])
+    pk=(N_public_modulus,g)
+    sk=(e,d_private_exponent,v)
+    return pk,sk
+
+# pk,sk=get_keys()
+
+def generate_random_text(length=100):
+    # unicode_characters = [chr(code) for code in range(32, 127)] + [chr(code) for code in range(160, 1280)]
+
+# a= ''.join(random.choice(unicode_characters) for _ in range(length))
+    with open('random_text.txt', "w") as f:
+        for l in range(length):
+            f.write(lorem.text()+"\n")
 
     
 
