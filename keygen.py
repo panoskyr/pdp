@@ -84,13 +84,12 @@ def find_g(p,q,N):
     
 
 def h(message):
-    try:
-        digest=hashes.Hash(hashes.SHA256)
-        digest.update(bytes(message))
-        return digest.finalize()
 
-    except:
-        "Could not digest message"
+    print(type(message), message)
+    digest=hashes.Hash(hashes.SHA256())
+    digest.update(message.encode('utf-8'))
+    return digest.finalize()
+
 
 
 def find_e():
@@ -161,8 +160,9 @@ def tagfile(file_to_tag,number_of_blocks,sk,pk):
     for block_num in range(number_of_blocks):
         start_idx=block_num*block_size
         # if we are at the last block go to the end of the file.
-        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else len(file_to_tag)
-
+        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len(file_to_tag)
+        
+        print(block_num, "\n")
         tagblock(sk,pk,data[start_idx:end_idx], block_num)
 
 def tagblock(sk,pk,block,i):
@@ -170,16 +170,17 @@ def tagblock(sk,pk,block,i):
     # T_i =( (h(w_i)^d ) modn * (g^(block*d)) modn ) modn 
     # the last modn brings it back to [0,N-1]
 
-    w_i=bytes(str(sk[2])+str(i), "utf-8")
+    w_i=str(sk[2])+str(i)
     g=pk[1]
     d=sk[1]
     N=pk[0]
     g_comp=pow(base=g,exp=(to_digit(block)*d),mod=N)
-    w_comp=pow(base=h(w_i),exp=d, mod=N)
+    w_comp=pow(base=int.from_bytes(h(w_i),byteorder='big'),exp=d, mod=N)
     tag=pow(w_comp*g_comp,1 ,N)
-    print(tag)
     
 
     
 pk,sk=get_keys()
-tagfile("random_text.txt",200,sk,pk)  
+tagfile("random_text.txt",500,sk,pk)
+
+
