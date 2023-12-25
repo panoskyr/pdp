@@ -1,6 +1,6 @@
 from cryptography.hazmat.primitives.asymmetric import rsa,utils
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives import hashes
 import random
 from sympy import isprime
 import string
@@ -84,8 +84,13 @@ def find_g(p,q,N):
     
 
 def h(message):
-    return SHA256(message)
+    try:
+        digest=hashes.Hash(hashes.SHA256)
+        digest.update(bytes(message))
+        return digest.finalize()
 
+    except:
+        "Could not digest message"
 
 
 def find_e():
@@ -136,7 +141,7 @@ def get_keys():
     sk=(e,d_private_exponent,v)
     return pk,sk
 
-# pk,sk=get_keys()
+
 
 def generate_random_text(length=100):
     # unicode_characters = [chr(code) for code in range(32, 127)] + [chr(code) for code in range(160, 1280)]
@@ -145,9 +150,36 @@ def generate_random_text(length=100):
     with open('random_text.txt', "w") as f:
         for l in range(length):
             f.write(lorem.text()+"\n")
+def to_digit(s):
+    return int(''.join(map(str,map(ord,s))))  
+  
+def tagfile(file_to_tag,number_of_blocks,sk,pk):
+    # use read bytes to capture all characters
+    with open(file_to_tag, "r") as file:
+        data=file.read()
+    block_size=len(data) // number_of_blocks
+    for block_num in range(number_of_blocks):
+        start_idx=block_num*block_size
+        # if we are at the last block go to the end of the file.
+        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else len(file_to_tag)
 
+        tagblock(sk,pk,data[start_idx:end_idx], block_num)
+
+def tagblock(sk,pk,block,i):
+    # T_i=(h(w_i) * g ^ block)^ d modn
+    # T_i =( (h(w_i)^d ) modn * (g^(block*d)) modn ) modn 
+    # the last modn brings it back to [0,N-1]
+
+    w_i=bytes(str(sk[2])+str(i), "utf-8")
+    g=pk[1]
+    d=sk[1]
+    N=pk[0]
+    g_comp=pow(base=g,exp=(to_digit(block)*d),mod=N)
+    w_comp=pow(base=h(w_i),exp=d, mod=N)
+    tag=pow(w_comp*g_comp,1 ,N)
+    print(tag)
     
 
-
-
-
+    
+pk,sk=get_keys()
+tagfile("random_text.txt",200,sk,pk)  
