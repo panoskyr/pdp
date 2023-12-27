@@ -298,22 +298,33 @@ def jj():
     m1="a"
     tag1=tagblock(sk,pk,m1,1)
 
-    w_i=str(v)+str(1)
-    h_w_i=int.from_bytes(h(w_i),byteorder='big')
+    m2="a"
+    tag2=tagblock(sk,pk,m2,2)
 
+    w_1=str(v)+str(1)
+    h_w_1=int.from_bytes(h(w_1),byteorder='big')
 
+    w_2=str(v)+str(2)
+    h_w_2=int.from_bytes(h(w_2), byteorder="big")
 
     
     # always do mod N before sending to bring it back to [0,N-1]
-    message=tag1
+    
+    message=(tag1*tag2) %N
 
-    l=pow(h_w_i*pow(g,to_digit(m1)),1,N)
     t=pow(message,e,N)
 
-    h_inv=pow(h_w_i,-1,N)
-    tau=pow(t*h_inv,1,N)
+    h_inv1=pow(h_w_1,-1,N)
+    tau=pow(t*h_inv1,1,N)
+
+    h_inv_2=pow(h_w_2,-1,N)
+    tau=pow(tau*h_inv_2,1,N)
+
     print(tau)
-    print(pow(g,to_digit(m1), N))
+    g1=pow(g,to_digit(m1), N)
+    g2=pow(g,to_digit(m2),N)
+    el=pow(g1*g2,1,N)
+    print(el)
 
 
 
