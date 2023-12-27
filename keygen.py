@@ -227,7 +227,7 @@ def gen_proof(pk,filepath,tagspath,chal):
     tau=pow(base=T, exp=sk[1], mod=pk[0])
 
     # tau is tau/h(w_i) modN
-    w_i=str(83764532362)+str(14) # concatenate with secret value v
+    w_i=str(83764532362)+str(1) # concatenate with secret value v
     h_w_i=int.from_bytes(h(w_i),byteorder='big') # hash and convert to number
     tau=(tau) % pk[0]
 
@@ -257,29 +257,81 @@ def tagblock(sk,pk,block,i):
     tag=pow(w_comp*g_comp,1 ,N)
     return tag
     
+def rsa_key(key_size=512):
+    private_key=rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=key_size
+    )
+    private_key_readable=private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    
+
+    public_key=private_key.public_key()
+    public_key_readable=public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+
+    p_prime=private_key.private_numbers().p
+    q_prime=private_key.private_numbers().q
+    N_public_modulus=public_key.public_numbers().n
+    d_private_exponent=private_key.private_numbers().d
+    e_public_exponent=65537
+    g=find_g(p_prime,q_prime,N_public_modulus)
+    v=987564
+    pk=(N_public_modulus,g)
+    sk=(e_public_exponent,d_private_exponent,v) 
+    return pk,sk
 
 def jj():
     block="adkjsdakdaskj akjdsajkdfakjkdas asdkdafkjdjkafsfdas adfjkdafsjkkjdsaf"
-    pk,sk=get_keys()
-    N=pk[0]
-    tag=tagblock(sk,pk,block,1)
-    w_i=str(sk[2])+str(1)
-    h_w_i=int.from_bytes(h(w_i),byteorder='big')
-    T=tag   
-    random.seed(1955)
-    s=random.getrandbits(16)
-    g=random.getrandbits(20)
-    g_s=pow(base=g, exp=s, mod=N)
-    rho=pow(base=g_s, exp=to_digit(block), mod=N)
+    pk,sk=rsa_key()
+    N,g=pk
+    e,d,v=sk
 
-    tau=pow(T,sk[0])
-    tau_comp=tau // h_w_i
-    tau=pow(tau_comp,1 ,N)
+    m=to_digit("asdf")
+    em=pow(m,e,N)
+    dm=pow(em,d,N)
     
-    rho_tonos=pow(tau, s, N)
+    print(m)
+    print(dm)
+    # w_i=str(v)+str(1)
+    # tagged_block=tagblock(sk,pk,block,1)
+    # print("Original tag is:",tagged_block )
 
-    assert rho ==rho_tonos
 
+    # h_w_i=int.from_bytes(h(w_i),byteorder='big')
+    # T=tagged_block
+    # random.seed(1955)
+    # s=random.getrandbits(16)
+    # g=random.getrandbits(20)
+    # g_s=pow(base=g, exp=s, mod=N)
+    # try:
+    #     rho=pow(base=g_s, exp=to_digit(block), mod=N)
+    # except:
+    #     print("could not compute")
+    # try:
+    #     tau=pow(T,e, N)
+    # except:
+    #     print("could not compute tau")
+
+    # tau=pow(tau//h_w_i, 1,N)
+
+
+    # try:
+    #     rho_tonos=pow(tau, s, N)
+    # except:
+    #     print("could not compute")
+
+    # print(rho_tonos )
+    # print(rho)
+
+
+
+    
 
 jj()
-
