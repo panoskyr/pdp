@@ -293,13 +293,53 @@ def jj():
     N,g=pk
     e,d,v=sk
 
-    m=to_digit("asdf")
-    em=pow(m,e,N)
-    dm=pow(em,d,N)
     
-    print(m)
-    print(dm)
-    # w_i=str(v)+str(1)
+
+    m1="a"
+    tag1=tagblock(sk,pk,m1,1)
+
+    w_i=str(v)+str(1)
+    h_w_i=int.from_bytes(h(w_i),byteorder='big')
+
+
+
+    
+    # always do mod N before sending to bring it back to [0,N-1]
+    message=tag1
+
+    l=pow(h_w_i*pow(g,to_digit(m1)),1,N)
+    t=pow(message,e,N)
+
+    h_inv=pow(h_w_i,-1,N)
+    tau=pow(t*h_inv,1,N)
+    print(tau)
+    print(pow(g,to_digit(m1), N))
+
+
+
+
+
+
+
+    # random.seed(1955)
+    # s=random.getrandbits(16)
+    # g=random.getrandbits(20)
+
+    # g_s=pow(g,s,N)
+
+    # rho=pow(g_s,message,N)
+    
+    # tau=pow(message,e,N)
+    # h_inv=pow(h_w_i,-1,N)
+    # tau=pow(tau*h_inv,1, N)
+    # rho_tonos=pow(tau,s,N)
+    # print(message)
+    # print(tau)
+    # print(rho)
+    # print(rho_tonos)
+
+
+
     # tagged_block=tagblock(sk,pk,block,1)
     # print("Original tag is:",tagged_block )
 
