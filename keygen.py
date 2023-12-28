@@ -232,6 +232,7 @@ def get_tags(tagspath):
 def gen_proof(pk,chal):
     indices_of_blocks,s=chal
     N,g=pk
+    random.seed(1955)
 
 
     blocks=get_blocks("d.txt","tags.txt")
@@ -245,16 +246,18 @@ def gen_proof(pk,chal):
     blocks=[blocks[i] for i in indices_of_blocks]
     # tagz=[tagblock(sk,pk,blocks[0],0), tagblock(sk,pk,blocks[1],1)]
     # print(tagz)
+    coefs=[random.getrandbits(512) for i in indices_of_blocks]
     product=1
-    for tag in tags:
+    for coef,tag in zip(coefs,tags):
+        tag=pow(tag,coef,N)
         product = pow(product*tag,1,N)
     T=product
     
 
     g_s=pow(g,s,N)
     g_prod=1
-    for block in blocks:
-        tmp=pow(g_s,to_digit(block),N)
+    for block , coef in zip(blocks, coefs):
+        tmp=pow(g_s,coef*to_digit(block),N)
         g_prod=pow(g_prod*tmp,1,N)
     rho=hash_number(g_prod)
     print(rho)
@@ -265,15 +268,18 @@ def check_proof(pk,sk,V,chal):
     N,g=pk
     e,d,v=sk
     T,rho=V
+    random.seed(1955)
+    coefs=[random.getrandbits(512) for i in indices_of_blocks]
 
     # t= T^e modN and ed congruent 1 modN
     t=pow(T,e,N)
 
 
-    for i in indices_of_blocks:
+    for i,coef in zip(indices_of_blocks, coefs):
         w_i=str(v)+str(i)
         h_w_i=int.from_bytes(h(w_i),byteorder='big')
-        h_inv=pow(h_w_i,-1,N)
+        h_wi_ai=pow(h_w_i,coef,N)
+        h_inv=pow(h_wi_ai,-1,N)
 
         t=pow(t*h_inv,1,N)
     
@@ -455,11 +461,11 @@ def hash_number(number):
 
 
 pk,sk=rsa_key()
-jj(pk,sk)
+# jj(pk,sk)
 
-# number_of_blocks=18
-# tagfile("d.txt",number_of_blocks,pk,sk)
+number_of_blocks=10
+tagfile("d.txt",number_of_blocks,pk,sk)
 
-# chal=gen_challenge(pk)
-# V=gen_proof(pk,chal)
-# check_proof(pk,sk,V,chal)
+chal=gen_challenge(pk)
+V=gen_proof(pk,chal)
+check_proof(pk,sk,V,chal)
