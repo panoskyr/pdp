@@ -179,7 +179,11 @@ def tagfile(file_to_tag,number_of_blocks,pk,sk):
         #     for block_num,block in zip(block_nums,blocks):
         #         f.write(f"{block_num}:{block}")
 
-            
+def get_num_of_blocks(tagsfilepath):
+    with open(tagsfilepath, "rb") as f:
+        num_of_blocks=sum(1 for _ in f)
+    return num_of_blocks
+
 
 def gen_challenge(pk):
     N,g=pk
@@ -193,14 +197,11 @@ def gen_challenge(pk):
 
     return indices_of_blocks,s
 
-def get_num_of_blocks(tagsfilepath):
-    with open(tagsfilepath, "rb") as f:
-        num_of_blocks=sum(1 for _ in f)
-    return num_of_blocks
 
 
-def gen_proof(pk):
-    indices_of_blocks,s=gen_challenge(pk)
+
+def gen_proof(pk,chal):
+    indices_of_blocks,s=chal
     N,g=pk
     # implicit argument len(tags)
     num_of_blocks=get_num_of_blocks("tags.txt")
@@ -245,9 +246,10 @@ def gen_proof(pk):
         g_prod=pow(g_prod*tmp,1,N)
     rho=hash_number(g_prod)
     print(rho)
-    return (T,rho), s
+    return (T,rho)
 
-def check_proof(pk,sk,V,s):
+def check_proof(pk,sk,V,chal):
+    indices_of_blocks,s=chal
     N,g=pk
     e,d,v=sk
     T,rho=V
@@ -448,6 +450,6 @@ pk,sk=rsa_key()
 number_of_blocks=2
 tagfile("d.txt",number_of_blocks,pk,sk)
 
-
-V,s=gen_proof(pk)
-check_proof(pk,sk,V,s)
+chal=gen_challenge(pk)
+V=gen_proof(pk,chal)
+check_proof(pk,sk,V,chal)
