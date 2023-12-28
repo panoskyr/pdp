@@ -198,29 +198,50 @@ def gen_challenge(pk):
     return indices_of_blocks,s
 
 
+def get_blocks(filepath,tagspath):
+
+    num_of_blocks=get_num_of_blocks(tagspath)
+    blocks=[]
+
+    with open(filepath, "r") as file:
+        data=file.read()
+
+    block_size=len(data) // number_of_blocks
+    print("block_size is ", block_size)
+
+
+    for block_num in range(num_of_blocks):
+        start_idx=block_num*block_size
+        # if we are at the last block go to the end of the file.
+        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len(filepath)
+        block=data[start_idx:end_idx]
+        blocks.append(block)
+    return blocks
 
 
 def gen_proof(pk,chal):
     indices_of_blocks,s=chal
     N,g=pk
     # implicit argument len(tags)
-    num_of_blocks=get_num_of_blocks("tags.txt")
+    # num_of_blocks=get_num_of_blocks("tags.txt")
 
     # get relevant blocks for proof
-    with open("d.txt", "r") as file:
-        data=file.read()
-    block_size=len(data) // number_of_blocks
-    print("block_size is ", block_size)
+    # with open("d.txt", "r") as file:
+    #     data=file.read()
+    # block_size=len(data) // number_of_blocks
+    # print("block_size is ", block_size)
 
-    blocks=[]
-    for block_num in range(num_of_blocks):
-        start_idx=block_num*block_size
-        # if we are at the last block go to the end of the file.
-        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("d.txt")
-        block=data[start_idx:end_idx]
-        blocks.append(block)
+    # blocks=[]
+
+    # for block_num in range(num_of_blocks):
+    #     start_idx=block_num*block_size
+    #     # if we are at the last block go to the end of the file.
+    #     end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("d.txt")
+    #     block=data[start_idx:end_idx]
+    #     blocks.append(block)
 
     # get tags
+    blocks=get_blocks("d.txt","tags.txt")
 
     tags=[]
     with open("tags.txt") as f:
@@ -231,6 +252,8 @@ def gen_proof(pk,chal):
     
     assert len(tags)==len(blocks)
 
+    tags=[tags[i] for i in indices_of_blocks]
+    blocks=[blocks[i] for i in indices_of_blocks]
     # tagz=[tagblock(sk,pk,blocks[0],0), tagblock(sk,pk,blocks[1],1)]
     # print(tagz)
     product=1
@@ -258,7 +281,7 @@ def check_proof(pk,sk,V,chal):
     t=pow(T,e,N)
 
 
-    for i in [0,1]:
+    for i in indices_of_blocks:
         w_i=str(v)+str(i)
         h_w_i=int.from_bytes(h(w_i),byteorder='big')
         h_inv=pow(h_w_i,-1,N)
