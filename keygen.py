@@ -151,72 +151,85 @@ def generate_random_text(length=100):
 def to_digit(s):
     return int(''.join(map(str,map(ord,s))))  
   
-def tagfile(file_to_tag,number_of_blocks,sk,pk):
+def tagfile(file_to_tag,number_of_blocks,pk,sk):
     # use read bytes to capture all characters
     with open(file_to_tag, "r") as file:
         data=file.read()
     block_size=len(data) // number_of_blocks
-    print("block_size is ", block_size)
+
+
     tags=[]
     block_nums=[]
-    blocks=[]
+    # blocks=[]
     for block_num in range(number_of_blocks):
         start_idx=block_num*block_size
         # if we are at the last block go to the end of the file.
         end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len(file_to_tag)
         block=data[start_idx:end_idx]
-        blocks.append(block)
-        tags.append(tagblock(sk,pk,data[start_idx:end_idx], block_num))
+        # blocks.append(block)
+        tag=tagblock(sk,pk, block, block_num)
+        tags.append(tag)
         block_nums.append(block_num)
+
         with open("tags.txt", "w") as f:
             for block_num, tag in zip(block_nums, tags):
                 f.write(f"{block_num}:{tag}\n")
-        with open("blocks.txt", "w") as f:
-            for block_num,block in zip(block_nums,blocks):
-                f.write(f"{block_num}:{block}")
+
+        # with open("blocks.txt", "w") as f:
+        #     for block_num,block in zip(block_nums,blocks):
+        #         f.write(f"{block_num}:{block}")
 
             
 
 def gen_challenge(pk):
     N,g=pk
+    num_of_blocks=get_num_of_blocks("tags.txt")
 
-    number_of_blocks=2
-    indices_of_blocks=[1,2]
+
+    indices_of_blocks=[0,1]
     s=random.getrandbits(16)
     g_s=pow(base=g, exp=s, mod=N)
-    return number_of_blocks,indices_of_blocks,g_s
-    
+    return indices_of_blocks,g_s
 
-def gen_proof(pk,sk):
-    # chal=gen_challenge(pk)
+def get_num_of_blocks(tagsfilepath):
+    with open(tagsfilepath, "rb") as f:
+        num_of_blocks=sum(1 for _ in f)
+    return num_of_blocks
+
+
+def gen_proof(pk):
+    indices_of_blocks,g_s=gen_challenge(pk)
     N,g=pk
-    e,d,v=sk
     # implicit argument len(tags)
-    # number_of_blocks=500
-    # with open("random_text.txt", "r") as file:
-    #     data=file.read()
-    # block_size=len(data) // number_of_blocks
-    # print("block_size is ", block_size)
-    # blocks=[]
-    # for block_num in range(500):
-    #     start_idx=block_num*block_size
-    #     # if we are at the last block go to the end of the file.
-    #     end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("random_text.txt")
-    #     block=data[start_idx:end_idx]
-    #     blocks.append(block)
-    # tags=[]
-    # with open("tags.txt") as f:
-    #     for line in f:
-    #         block_num, tag=line.strip().split(sep=':')
-    #         block_num=int(block_num)
-    #         tags.append(tag)
+    num_of_blocks=get_num_of_blocks("tags.txt")
 
-    # chal_tags=[tags[i] for i in chal[1]]
-    # chal_blocks=[to_digit(blocks[i]) for i in chal[1]]
+    # get relevant blocks for proof
+    with open("d.txt", "r") as file:
+        data=file.read()
+    block_size=len(data) // number_of_blocks
+    print("block_size is ", block_size)
 
-    blocks=["asdf", "weqf"]
-    tags=[tagblock(sk,pk,blocks[0],1), tagblock(sk,pk,blocks[1],2)]
+    blocks=[]
+    for block_num in range(num_of_blocks):
+        start_idx=block_num*block_size
+        # if we are at the last block go to the end of the file.
+        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("d.txt")
+        block=data[start_idx:end_idx]
+        blocks.append(block)
 
+    # get tags
+
+    tags=[]
+    with open("tags.txt") as f:
+        for line in f:
+            block_num, tag=line.strip().split(sep=':')
+            block_num=int(block_num)
+            tags.append(int(tag))
+    
+    assert len(tags)==len(blocks)
+
+    # tagz=[tagblock(sk,pk,blocks[0],0), tagblock(sk,pk,blocks[1],1)]
+    # print(tagz)
     product=1
     for tag in tags:
         product = pow(product*tag,1,N)
@@ -245,13 +258,10 @@ def check_proof(pk,sk,V):
     random.seed(1955)
     s=random.getrandbits(16)
 
-    for i in [1,2]:
-        print(i)
+    for i in [0,1]:
         w_i=str(v)+str(i)
         h_w_i=int.from_bytes(h(w_i),byteorder='big')
         h_inv=pow(h_w_i,-1,N)
-
-        print("h_inv is: ", h_inv)
 
         t=pow(t*h_inv,1,N)
     
@@ -274,6 +284,7 @@ def tagblock(sk,pk,block,i):
     g_comp=pow(base=g,exp=(to_digit(block)*d),mod=N)
     w_comp=pow(base=int.from_bytes(h(w_i),byteorder='big'),exp=d, mod=N)
     tag=pow(w_comp*g_comp,1 ,N)
+    print (tag)
     return tag
     
 def rsa_key(key_size=512):
@@ -373,11 +384,10 @@ def jj(pk,sk):
 
 
 def hash_number(number):
-    # Convert the number to bytes
+    # convert number to bytes
     # add 7 to avoid truncation
     number_bytes = number.to_bytes((number.bit_length() + 7) // 8, byteorder='big')
 
-    # Hash the bytes using SHA-256
     digest = hashes.Hash(hashes.SHA256())
     digest.update(number_bytes)
     hashed_number = digest.finalize()
@@ -437,7 +447,9 @@ def hash_number(number):
 
 
 pk,sk=rsa_key()
-# jj(pk,sk)
+number_of_blocks=2
+tagfile("d.txt",number_of_blocks,pk,sk)
 
-V=gen_proof(pk,sk)
+
+V=gen_proof(pk)
 check_proof(pk,sk,V)
