@@ -332,7 +332,7 @@ def rsa_key(key_size=512):
 def jj(pk,sk):
     random.seed(1955)
     s=random.getrandbits(16)
-    
+    a1=random.getrandbits(5)   
     N,g=pk
     e,d,v=sk
 
@@ -341,58 +341,30 @@ def jj(pk,sk):
     m1="asdf"
     tag1=tagblock(sk,pk,m1,0)
 
-    m2="adddse"
-    tag2=tagblock(sk,pk,m2,1)
-
     w_1=str(v)+str(0)
     h_w_1=int.from_bytes(h(w_1),byteorder='big')
 
-
-    w_2=str(v)+str(1)
-    h_w_2=int.from_bytes(h(w_2),byteorder='big')
     # gen proof
 
-    a1=random.getrandbits(512)
-    a2=random.getrandbits(512)
+    T_proof=pow(tag1,a1,N)
 
-
-
-    T1=pow(tag1,a1,N)
-    T2=pow(tag2,a2,N)
-
-    T_proof=pow(tag1*tag2,1,N)
-
-    
     g_s=pow(g,s,N)
 
-    rho1=pow(g_s,to_digit(m1)*a1,N)
-    rho2=pow(g_s, to_digit(m2)*a2,N)
+    rho=pow(g_s,a1*to_digit(m1),N)
 
-    rho=pow(rho1*rho2,1,N)
-    
     print(rho)
 
-
-    # checkproof
+    #checkproof
 
     t=pow(T_proof,e,N)
-
-    h_w_1_a1=pow(h_w_1,a1,N)
-    h_inv1=pow(h_w_1_a1,-1,N)
-
-    tau=pow(t*h_inv1,1,N)
-
-    h_w2_a2=pow(h_w_2, a2, N)
-    h_inv2=pow(h_w2_a2,-1,N)
-    tau=pow(tau*h_inv2,1,N)
-
-
-    tau_s=pow(tau,s,N)
-    print(tau_s)
-
-    # print(hash_number(tau_s))
     
-    # print(hash_number(rho1))
+    h_w1_a1=pow(h_w_1,a1,N)
+    inv=pow(h_w1_a1,-1,N)
+    t=pow(t*inv,1,N)
+
+    t_s=pow(t,s,N)
+
+    print(t_s)
 
 
 def hash_number(number):
