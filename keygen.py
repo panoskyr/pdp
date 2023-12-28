@@ -187,12 +187,12 @@ def gen_challenge(pk):
     return number_of_blocks,indices_of_blocks,g_s
     
 
-def gen_proof(pk,sk,filepath,tagspath,chal):
-    chal=gen_challenge(pk[0])
+def gen_proof(pk,sk):
+    # chal=gen_challenge(pk)
     N,g=pk
     e,d,v=sk
     # implicit argument len(tags)
-    number_of_blocks=500
+    # number_of_blocks=500
     # with open("random_text.txt", "r") as file:
     #     data=file.read()
     # block_size=len(data) // number_of_blocks
@@ -231,17 +231,29 @@ def gen_proof(pk,sk,filepath,tagspath,chal):
         tmp=pow(g_s,to_digit(block),N)
         g_prod=pow(g_s*tmp,1,N)
     rho=hash_number(g_prod)
+    print(rho)
     return (T,rho)
 
 def check_proof(pk,sk,V):
     N,g=pk
     e,d,v=sk
     T,rho=V
-    T=pow(T,e,N)
+    t=pow(T,e,N)
+    random.seed(1955)
+    s=random.getrandbits(16)
 
     for i in [1,2]:
+        w_i=str(v)+str(i)
+        h_w_i=int.from_bytes(h(w_i),byteorder='big')
+        h_inv=pow(h_w_i,-1,N)
 
+        t=pow(t*h_inv,1,N)
+    
+    t_s=pow(t,s,N)
 
+    rho=hash_number(t_s)
+
+    print(rho)
 
 
     
@@ -421,8 +433,11 @@ def hash_number(number):
     # print(rho_tonos )
     # print(rho)
 
-
+jj()
 
     
 
-jj()
+# pk,sk=rsa_key()
+
+# V=gen_proof(pk,sk)
+# check_proof(pk,sk,V)
