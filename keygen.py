@@ -187,9 +187,11 @@ def gen_challenge(pk):
 
 
     indices_of_blocks=[0,1]
+
+    # s is generated per challenge
     s=random.getrandbits(16)
-    g_s=pow(base=g, exp=s, mod=N)
-    return indices_of_blocks,g_s
+
+    return indices_of_blocks,s
 
 def get_num_of_blocks(tagsfilepath):
     with open(tagsfilepath, "rb") as f:
@@ -198,7 +200,7 @@ def get_num_of_blocks(tagsfilepath):
 
 
 def gen_proof(pk):
-    indices_of_blocks,g_s=gen_challenge(pk)
+    indices_of_blocks,s=gen_challenge(pk)
     N,g=pk
     # implicit argument len(tags)
     num_of_blocks=get_num_of_blocks("tags.txt")
@@ -235,8 +237,6 @@ def gen_proof(pk):
         product = pow(product*tag,1,N)
     T=product
     
-    random.seed(1955)
-    s=random.getrandbits(16)
 
     g_s=pow(g,s,N)
     g_prod=1
@@ -245,9 +245,9 @@ def gen_proof(pk):
         g_prod=pow(g_prod*tmp,1,N)
     rho=hash_number(g_prod)
     print(rho)
-    return (T,rho)
+    return (T,rho), s
 
-def check_proof(pk,sk,V):
+def check_proof(pk,sk,V,s):
     N,g=pk
     e,d,v=sk
     T,rho=V
@@ -255,8 +255,6 @@ def check_proof(pk,sk,V):
     # t= T^e modN and ed congruent 1 modN
     t=pow(T,e,N)
 
-    random.seed(1955)
-    s=random.getrandbits(16)
 
     for i in [0,1]:
         w_i=str(v)+str(i)
@@ -451,5 +449,5 @@ number_of_blocks=2
 tagfile("d.txt",number_of_blocks,pk,sk)
 
 
-V=gen_proof(pk)
-check_proof(pk,sk,V)
+V,s=gen_proof(pk)
+check_proof(pk,sk,V,s)
