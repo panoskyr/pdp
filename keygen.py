@@ -332,16 +332,16 @@ def rsa_key(key_size=512):
 def jj(pk,sk):
     random.seed(1955)
     s=random.getrandbits(16)
-    a1=random.getrandbits(5)   
+    a1=random.getrandbits(512)   
     N,g=pk
     e,d,v=sk
 
     
 
-    m1="asdf"
-    tag1=tagblock(sk,pk,m1,0)
+    m1="asdfasdfdds dds d s"
+    tag1=tagblock(sk,pk,m1,1)
 
-    w_1=str(v)+str(0)
+    w_1=str(v)+str(1)
     h_w_1=int.from_bytes(h(w_1),byteorder='big')
 
     # gen proof
