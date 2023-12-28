@@ -330,7 +330,7 @@ def rsa_key(key_size=512):
     d_private_exponent=private_key.private_numbers().d
     e_public_exponent=65537
     g=find_g(p_prime,q_prime,N_public_modulus)
-    v=987564
+    v=random.getrandbits(128)
     pk=(N_public_modulus,g)
     sk=(e_public_exponent,d_private_exponent,v) 
     return pk,sk
