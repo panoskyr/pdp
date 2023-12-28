@@ -152,7 +152,6 @@ def to_digit(s):
     return int(''.join(map(str,map(ord,s))))  
   
 def tagfile(file_to_tag,number_of_blocks,pk,sk):
-    # use read bytes to capture all characters
     with open(file_to_tag, "r") as file:
         data=file.read()
     block_size=len(data) // number_of_blocks
@@ -190,7 +189,9 @@ def gen_challenge(pk):
     num_of_blocks=get_num_of_blocks("tags.txt")
 
 
-    indices_of_blocks=[0,1]
+    c=7
+    assert c <= num_of_blocks
+    indices_of_blocks=random.sample(range(num_of_blocks),c)
 
     # s is generated per challenge
     s=random.getrandbits(16)
@@ -458,7 +459,7 @@ def hash_number(number):
 
 
 pk,sk=rsa_key()
-number_of_blocks=2
+number_of_blocks=18
 tagfile("d.txt",number_of_blocks,pk,sk)
 
 chal=gen_challenge(pk)
