@@ -207,14 +207,14 @@ def get_blocks(filepath,tagspath):
     with open(filepath, "r") as file:
         data=file.read()
 
-    block_size=len(data) // number_of_blocks
+    block_size=len(data) // num_of_blocks
     print("block_size is ", block_size)
 
 
     for block_num in range(num_of_blocks):
         start_idx=block_num*block_size
         # if we are at the last block go to the end of the file.
-        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len(filepath)
+        end_idx=start_idx+block_size if block_num <num_of_blocks-1 else start_idx+len(filepath)
         block=data[start_idx:end_idx]
         blocks.append(block)
     return blocks
@@ -296,7 +296,7 @@ def tagblock(sk,pk,block,i):
     g_comp=pow(base=g,exp=(to_digit(block)*d),mod=N)
     w_comp=pow(base=int.from_bytes(h(w_i),byteorder='big'),exp=d, mod=N)
     tag=pow(w_comp*g_comp,1 ,N)
-    print (tag)
+    # print (tag)
     return tag
     
 def rsa_key(key_size=512):
@@ -330,6 +330,8 @@ def rsa_key(key_size=512):
     return pk,sk
 
 def jj(pk,sk):
+    random.seed(1955)
+    s=random.getrandbits(16)
     
     N,g=pk
     e,d,v=sk
@@ -337,62 +339,60 @@ def jj(pk,sk):
     
 
     m1="asdf"
-    tag1=tagblock(sk,pk,m1,1)
+    tag1=tagblock(sk,pk,m1,0)
 
-    m2="weqf"
-    tag2=tagblock(sk,pk,m2,2)
+    m2="adddse"
+    tag2=tagblock(sk,pk,m2,1)
 
-    blocks=["asdf", "weqf"]
-    tags=[tagblock(sk,pk,blocks[0],1), tagblock(sk,pk,blocks[1], 2)]
-
-    pr=1
-    for tag in tags:
-        pr=pow(pr*tag,1,N)
-    messageq=pr
-    print("messageq:", messageq)
-
-    w_1=str(v)+str(1)
+    w_1=str(v)+str(0)
     h_w_1=int.from_bytes(h(w_1),byteorder='big')
 
-    w_2=str(v)+str(2)
-    h_w_2=int.from_bytes(h(w_2), byteorder="big")
 
-    
-    # always do mod N before sending to bring it back to [0,N-1]
-    
-    message=pow(tag1*tag2,1,N)
+    w_2=str(v)+str(1)
+    h_w_2=int.from_bytes(h(w_2),byteorder='big')
+    # gen proof
 
-    t=pow(message,e,N)
+    a1=random.getrandbits(512)
+    a2=random.getrandbits(512)
 
-    h_inv1=pow(h_w_1,-1,N)
-    tau=pow(t*h_inv1,1,N)
 
-    h_inv_2=pow(h_w_2,-1,N)
-    tau=pow(tau*h_inv_2,1,N)
 
-    print(tau)
-    g1=pow(g,to_digit(m1), N)
-    g2=pow(g,to_digit(m2), N)
-    el=pow(g1*g2,1,N)
-    print(el)
+    T1=pow(tag1,a1,N)
+    T2=pow(tag2,a2,N)
 
-    random.seed(1955)
-    s=random.getrandbits(16)
+    T_proof=pow(tag1*tag2,1,N)
+
     
     g_s=pow(g,s,N)
-    rho1=pow(g_s,to_digit(m1),N)
-    rho2=pow(g_s,to_digit(m2),N)
+
+    rho1=pow(g_s,to_digit(m1)*a1,N)
+    rho2=pow(g_s, to_digit(m2)*a2,N)
 
     rho=pow(rho1*rho2,1,N)
-
+    
     print(rho)
+
+
+    # checkproof
+
+    t=pow(T_proof,e,N)
+
+    h_w_1_a1=pow(h_w_1,a1,N)
+    h_inv1=pow(h_w_1_a1,-1,N)
+
+    tau=pow(t*h_inv1,1,N)
+
+    h_w2_a2=pow(h_w_2, a2, N)
+    h_inv2=pow(h_w2_a2,-1,N)
+    tau=pow(tau*h_inv2,1,N)
+
 
     tau_s=pow(tau,s,N)
     print(tau_s)
 
-    print(hash_number(tau_s))
+    # print(hash_number(tau_s))
     
-    print(hash_number(rho))
+    # print(hash_number(rho1))
 
 
 def hash_number(number):
@@ -459,9 +459,11 @@ def hash_number(number):
 
 
 pk,sk=rsa_key()
-number_of_blocks=18
-tagfile("d.txt",number_of_blocks,pk,sk)
+jj(pk,sk)
 
-chal=gen_challenge(pk)
-V=gen_proof(pk,chal)
-check_proof(pk,sk,V,chal)
+# number_of_blocks=18
+# tagfile("d.txt",number_of_blocks,pk,sk)
+
+# chal=gen_challenge(pk)
+# V=gen_proof(pk,chal)
+# check_proof(pk,sk,V,chal)
