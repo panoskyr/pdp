@@ -214,7 +214,7 @@ def gen_proof(pk,sk):
     # chal_tags=[tags[i] for i in chal[1]]
     # chal_blocks=[to_digit(blocks[i]) for i in chal[1]]
 
-    blocks=["asdewew","adafssd"]
+    blocks=["asdf", "weqf"]
     tags=[tagblock(sk,pk,blocks[0],1), tagblock(sk,pk,blocks[1],2)]
 
     product=1
@@ -229,7 +229,7 @@ def gen_proof(pk,sk):
     g_prod=1
     for block in blocks:
         tmp=pow(g_s,to_digit(block),N)
-        g_prod=pow(g_s*tmp,1,N)
+        g_prod=pow(g_prod*tmp,1,N)
     rho=hash_number(g_prod)
     print(rho)
     return (T,rho)
@@ -238,14 +238,20 @@ def check_proof(pk,sk,V):
     N,g=pk
     e,d,v=sk
     T,rho=V
+
+    # t= T^e modN and ed congruent 1 modN
     t=pow(T,e,N)
+
     random.seed(1955)
     s=random.getrandbits(16)
 
     for i in [1,2]:
+        print(i)
         w_i=str(v)+str(i)
         h_w_i=int.from_bytes(h(w_i),byteorder='big')
         h_inv=pow(h_w_i,-1,N)
+
+        print("h_inv is: ", h_inv)
 
         t=pow(t*h_inv,1,N)
     
@@ -254,20 +260,6 @@ def check_proof(pk,sk,V):
     rho=hash_number(t_s)
 
     print(rho)
-
-
-    
-    
-
-
-# pk,sk=get_keys()
-# tagfile("random_text.txt",500,sk,pk)
-# gen_proof(pk,2,3,4)
-
-
-
-
-# generate_random_text()
 
 
 def tagblock(sk,pk,block,i):
@@ -314,18 +306,27 @@ def rsa_key(key_size=512):
     sk=(e_public_exponent,d_private_exponent,v) 
     return pk,sk
 
-def jj():
-    pk,sk=rsa_key()
+def jj(pk,sk):
+    
     N,g=pk
     e,d,v=sk
 
     
 
-    m1="a"
+    m1="asdf"
     tag1=tagblock(sk,pk,m1,1)
 
-    m2="aadfadsf"
+    m2="weqf"
     tag2=tagblock(sk,pk,m2,2)
+
+    blocks=["asdf", "weqf"]
+    tags=[tagblock(sk,pk,blocks[0],1), tagblock(sk,pk,blocks[1], 2)]
+
+    pr=1
+    for tag in tags:
+        pr=pow(pr*tag,1,N)
+    messageq=pr
+    print("messageq:", messageq)
 
     w_1=str(v)+str(1)
     h_w_1=int.from_bytes(h(w_1),byteorder='big')
@@ -348,7 +349,7 @@ def jj():
 
     print(tau)
     g1=pow(g,to_digit(m1), N)
-    g2=pow(g,to_digit(m2),N)
+    g2=pow(g,to_digit(m2), N)
     el=pow(g1*g2,1,N)
     print(el)
 
@@ -433,11 +434,10 @@ def hash_number(number):
     # print(rho_tonos )
     # print(rho)
 
-jj()
 
-    
 
-# pk,sk=rsa_key()
+pk,sk=rsa_key()
+# jj(pk,sk)
 
-# V=gen_proof(pk,sk)
-# check_proof(pk,sk,V)
+V=gen_proof(pk,sk)
+check_proof(pk,sk,V)
