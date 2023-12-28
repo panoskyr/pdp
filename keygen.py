@@ -218,37 +218,25 @@ def get_blocks(filepath,tagspath):
         blocks.append(block)
     return blocks
 
-
-def gen_proof(pk,chal):
-    indices_of_blocks,s=chal
-    N,g=pk
-    # implicit argument len(tags)
-    # num_of_blocks=get_num_of_blocks("tags.txt")
-
-    # get relevant blocks for proof
-    # with open("d.txt", "r") as file:
-    #     data=file.read()
-    # block_size=len(data) // number_of_blocks
-    # print("block_size is ", block_size)
-
-    # blocks=[]
-
-    # for block_num in range(num_of_blocks):
-    #     start_idx=block_num*block_size
-    #     # if we are at the last block go to the end of the file.
-    #     end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("d.txt")
-    #     block=data[start_idx:end_idx]
-    #     blocks.append(block)
-
-    # get tags
-    blocks=get_blocks("d.txt","tags.txt")
-
+def get_tags(tagspath):
     tags=[]
-    with open("tags.txt") as f:
+    with open(tagspath) as f:
         for line in f:
             block_num, tag=line.strip().split(sep=':')
             block_num=int(block_num)
             tags.append(int(tag))
+    return tags
+
+
+def gen_proof(pk,chal):
+    indices_of_blocks,s=chal
+    N,g=pk
+
+
+    blocks=get_blocks("d.txt","tags.txt")
+
+    tags=get_tags("tags.txt")
+
     
     assert len(tags)==len(blocks)
 
