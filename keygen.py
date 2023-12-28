@@ -177,61 +177,76 @@ def tagfile(file_to_tag,number_of_blocks,sk,pk):
 
             
 
-def gen_challenge(N):
+def gen_challenge(pk):
+    N,g=pk
 
-    number_of_blocks=1
-    indices_of_blocks=[15]
+    number_of_blocks=2
+    indices_of_blocks=[1,2]
     s=random.getrandbits(16)
-    g=random.getrandbits(20)
     g_s=pow(base=g, exp=s, mod=N)
     return number_of_blocks,indices_of_blocks,g_s
     
 
-def gen_proof(pk,filepath,tagspath,chal):
+def gen_proof(pk,sk,filepath,tagspath,chal):
     chal=gen_challenge(pk[0])
+    N,g=pk
+    e,d,v=sk
     # implicit argument len(tags)
     number_of_blocks=500
-    with open("random_text.txt", "r") as file:
-        data=file.read()
-    block_size=len(data) // number_of_blocks
-    print("block_size is ", block_size)
-    blocks=[]
-    for block_num in range(500):
-        start_idx=block_num*block_size
-        # if we are at the last block go to the end of the file.
-        end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("random_text.txt")
-        block=data[start_idx:end_idx]
-        blocks.append(block)
-    tags=[]
-    with open("tags.txt") as f:
-        for line in f:
-            block_num, tag=line.strip().split(sep=':')
-            block_num=int(block_num)
-            tags.append(tag)
+    # with open("random_text.txt", "r") as file:
+    #     data=file.read()
+    # block_size=len(data) // number_of_blocks
+    # print("block_size is ", block_size)
+    # blocks=[]
+    # for block_num in range(500):
+    #     start_idx=block_num*block_size
+    #     # if we are at the last block go to the end of the file.
+    #     end_idx=start_idx+block_size if block_num <number_of_blocks-1 else start_idx+len("random_text.txt")
+    #     block=data[start_idx:end_idx]
+    #     blocks.append(block)
+    # tags=[]
+    # with open("tags.txt") as f:
+    #     for line in f:
+    #         block_num, tag=line.strip().split(sep=':')
+    #         block_num=int(block_num)
+    #         tags.append(tag)
 
-    chal_tags=[tags[i] for i in chal[1]]
-    chal_blocks=[to_digit(blocks[i]) for i in chal[1]]
+    # chal_tags=[tags[i] for i in chal[1]]
+    # chal_blocks=[to_digit(blocks[i]) for i in chal[1]]
+
+    blocks=["asdewew","adafssd"]
+    tags=[tagblock(sk,pk,blocks[0],1), tagblock(sk,pk,blocks[1],2)]
 
     product=1
-    for i in chal_tags:
-        product *= int(i)
-        product=product % pk[0]
+    for tag in tags:
+        product = pow(product*tag,1,N)
     T=product
-    g_s=chal[2]
-    blocksum=sum(chal_blocks)
-    rho=pow(base=g_s,exp=blocksum, mod=pk[0])
-    print("rho is:" ,rho)
-    print("T is:" ,T)
+    
+    random.seed(1955)
+    s=random.getrandbits(16)
 
-    # tau = tau^e modN
-    tau=pow(base=T, exp=sk[1], mod=pk[0])
+    g_s=pow(g,s,N)
+    g_prod=1
+    for block in blocks:
+        tmp=pow(g_s,to_digit(block),N)
+        g_prod=pow(g_s*tmp,1,N)
+    rho=hash_number(g_prod)
+    return (T,rho)
 
-    # tau is tau/h(w_i) modN
-    w_i=str(83764532362)+str(1) # concatenate with secret value v
-    h_w_i=int.from_bytes(h(w_i),byteorder='big') # hash and convert to number
-    tau=(tau) % pk[0]
+def check_proof(pk,sk,V):
+    N,g=pk
+    e,d,v=sk
+    T,rho=V
+    T=pow(T,e,N)
 
-    print("τ is:", tau)
+    for i in [1,2]:
+
+
+
+
+    
+    
+
 
 # pk,sk=get_keys()
 # tagfile("random_text.txt",500,sk,pk)
@@ -288,7 +303,6 @@ def rsa_key(key_size=512):
     return pk,sk
 
 def jj():
-    block="adkjsdakdaskj akjdsajkdfakjkdas asdkdafkjdjkafsfdas adfjkdafsjkkjdsaf"
     pk,sk=rsa_key()
     N,g=pk
     e,d,v=sk
@@ -298,7 +312,7 @@ def jj():
     m1="a"
     tag1=tagblock(sk,pk,m1,1)
 
-    m2="a"
+    m2="aadfadsf"
     tag2=tagblock(sk,pk,m2,2)
 
     w_1=str(v)+str(1)
@@ -310,7 +324,7 @@ def jj():
     
     # always do mod N before sending to bring it back to [0,N-1]
     
-    message=(tag1*tag2) %N
+    message=pow(tag1*tag2,1,N)
 
     t=pow(message,e,N)
 
@@ -326,15 +340,41 @@ def jj():
     el=pow(g1*g2,1,N)
     print(el)
 
+    random.seed(1955)
+    s=random.getrandbits(16)
+    
+    g_s=pow(g,s,N)
+    rho1=pow(g_s,to_digit(m1),N)
+    rho2=pow(g_s,to_digit(m2),N)
+
+    rho=pow(rho1*rho2,1,N)
+
+    print(rho)
+
+    tau_s=pow(tau,s,N)
+    print(tau_s)
+
+    print(hash_number(tau_s))
+    
+    print(hash_number(rho))
+
+
+def hash_number(number):
+    # Convert the number to bytes
+    # add 7 to avoid truncation
+    number_bytes = number.to_bytes((number.bit_length() + 7) // 8, byteorder='big')
+
+    # Hash the bytes using SHA-256
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(number_bytes)
+    hashed_number = digest.finalize()
+
+    return hashed_number
+    
 
 
 
 
-
-
-    # random.seed(1955)
-    # s=random.getrandbits(16)
-    # g=random.getrandbits(20)
 
     # g_s=pow(g,s,N)
 
