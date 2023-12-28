@@ -333,24 +333,41 @@ def jj(pk,sk):
     random.seed(1955)
     s=random.getrandbits(16)
     a1=random.getrandbits(512)   
+    a2=random.getrandbits(512)
     N,g=pk
     e,d,v=sk
 
     
 
     m1="asdfasdfdds dds d s"
-    tag1=tagblock(sk,pk,m1,1)
+    tag1=tagblock(sk,pk,m1,0)
 
-    w_1=str(v)+str(1)
+    w_1=str(v)+str(0)
     h_w_1=int.from_bytes(h(w_1),byteorder='big')
 
-    # gen proof
 
-    T_proof=pow(tag1,a1,N)
+    m2="asdfasdfdds dds d s"
+    tag2=tagblock(sk,pk,m2,1)
+
+    w_2=str(v)+str(1)
+    h_w_2=int.from_bytes(h(w_2),byteorder='big')
+
+
+    # gen proof
+    T1=pow(tag1,a1,N)
+    T2=pow(tag2,a2,N)
+
+    #multiply each tag after raising to coefficient
+    T_proof=pow(T1*T2,1,N)
+
+
 
     g_s=pow(g,s,N)
 
-    rho=pow(g_s,a1*to_digit(m1),N)
+    r1=pow(g_s,a1*to_digit(m1),N)
+    r2=pow(g_s, a2*to_digit(m2), N)
+
+    rho=pow(r1*r2,1,N)
 
     print(rho)
 
@@ -361,6 +378,13 @@ def jj(pk,sk):
     h_w1_a1=pow(h_w_1,a1,N)
     inv=pow(h_w1_a1,-1,N)
     t=pow(t*inv,1,N)
+
+
+    h_w2_a2=pow(h_w_2,a2,N)
+    inv=pow(h_w2_a2,-1,N)
+    t=pow(t*inv,1,N)
+
+
 
     t_s=pow(t,s,N)
 
