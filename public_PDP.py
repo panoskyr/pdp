@@ -144,7 +144,7 @@ class Public_PDP():
             data=file.read()
 
         block_size=len(data) // num_of_blocks
-        print("block_size is ", block_size)
+        # print("block_size is ", block_size)
 
 
         for block_num in range(num_of_blocks):
@@ -168,7 +168,7 @@ class Public_PDP():
     def gen_proof(self,pk,chal):
         indices_of_blocks,s=chal
         N,g=pk
-        random.seed(1955)
+        
 
 
         blocks=self.get_blocks(self.filepath,self.tagspath)
@@ -204,7 +204,6 @@ class Public_PDP():
         N,g=pk
         e,d,v=sk
         T,rho=V
-        random.seed(1955)
         coefs=[random.getrandbits(512) for i in indices_of_blocks]
 
         # t= T^e modN and ed congruent 1 modN

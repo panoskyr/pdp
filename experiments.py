@@ -124,6 +124,27 @@ def time_create_challenge(filepath,key_size,number_of_blocks,challenge_blocks, n
     print("Time to generate {} challenges: {}".format(num_challenges, elapsed_time))
     print("Time per challenge: ", time_per_chal)
 
+def time_create_proof(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=Public_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    times=[]
+    for _ in range(num_challenges):
+        chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+        start_time=time.time() 
+        pdp.gen_proof(pk,chal)
+        end_time=time.time()
+        times.append(end_time-start_time)
+    
+    
+    elapsed_time=sum(times)
+    time_per_proof=elapsed_time / num_challenges
+    print("Time to generate {} challenges: {}".format(num_challenges, elapsed_time))
+    print("Time per challenge: ", time_per_proof)
+
 
 number_of_blocks=[10, 100,1000]
 import os
@@ -140,6 +161,7 @@ files=["fs/100_bytes.txt", "fs/1000_bytes.txt","fs/10000_bytes.txt"]
 
 
 # time_create_challenge("fs/10000_bytes.txt",512,1000, 400,100)
+time_create_proof("fs/10000_bytes.txt",512,1000, 400,100)
 
 
 
