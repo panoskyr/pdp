@@ -240,4 +240,4 @@ def plot_tradeoff_preprocessing_proofgen():
 
 # plot_tradeoff_preprocessing_proofgen()
 
-time_tradeoff_preprocessing_proofgen("fs/1000000_bytes.txt",512 ,50)
+# time_tradeoff_preprocessing_proofgen("fs/1000000_bytes.txt",512 ,50)
