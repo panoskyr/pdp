@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 import random
 from sympy import isprime
+import os
 class Public_PDP():
 
     def __init__(self,filepath="d.txt",tagspath="tags.txt",key_size=512):
@@ -39,7 +40,14 @@ class Public_PDP():
         v=random.getrandbits(128)
         pk=(N_public_modulus,g)
         sk=(e_public_exponent,d_private_exponent,v) 
+        keysfilepath=self.get_keysfilename()
+        self.write_pk_sk_to_file(keysfilepath,pk,sk)
         return pk,sk
+    
+    def get_keysfilename(self):
+        filename, extension=os.path.splitext(self.filepath)
+        keysfilename=filename+"_keys"+extension
+        return keysfilename
     
     def is_ok_number(self,a, p, q):
         aModp=a % p
@@ -243,6 +251,19 @@ class Public_PDP():
         hashed_number = digest.finalize()
 
         return hashed_number
+    
+    def write_pk_sk_to_file(self,keysfile,pk,sk):
+        with open(keysfile, "w") as file:
+            N_public_modulus,g=pk
+            e_public_exponent,d_private_exponent,v=sk
+            file.write(f"N_public_modulus={N_public_modulus}\n")
+            file.write(f"d_private_exponent={d_private_exponent}\n")
+            file.write(f"e_public_exponent={e_public_exponent}\n")
+            file.write(f"g={g}\n")
+            file.write(f"v={v}\n")
+            file.write(f"pk={pk}\n")
+            file.write(f"sk={sk}\n")
+        
 
         
     
