@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
-files=["fs/1000_bytes.txt","fs/10000_bytes.txt","fs/100000_bytes.txt","fs/1000000_bytes.txt"]
+files=["fs/100_bytes.txt","fs/1000_bytes.txt","fs/10000_bytes.txt","fs/100000_bytes.txt","fs/1000000_bytes.txt"]
 
 def time_create_replica(filepath,key_size,number_of_blocks):
     # to create a replica using PDP we need to generate the keys 
@@ -49,4 +49,49 @@ def plot_replica_creation_time_vs_block_size():
 
     plt.savefig("repl_creation_dif_files_and_num_blocks.png")    
 
-plot_replica_creation_time_vs_block_size()
+def time_proof_generation(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=E_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    times=[]
+    for _ in range(num_challenges):
+        chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+        start_time=time.time() 
+        pdp.gen_proof(pk,chal)
+        end_time=time.time()
+        times.append(end_time-start_time)
+    
+    
+    elapsed_time=sum(times)
+    time_per_proof=elapsed_time / num_challenges
+    print("Time to generate {} proofs: {}".format(num_challenges, elapsed_time))
+    print("Time per proof generation for E-PDP: ", time_per_proof)
+    return time_per_proof
+
+# time_proof_generation(files[0],512,50,20,10)
+# time_proof_generation(files[1], 512,100,40,10)
+# time_proof_generation(files[2], 512,500,100,10)
+#time_proof_generation(files[3], 1024,600,100,10)
+# time_proof_generation(files[0], 512,50,20,10)
+def plot_proof_gen_time_vs_file_size():
+
+# time_proof_generation(files[0],512,50,20,10)
+# time_proof_generation(files[1], 512,100,40,10)
+# time_proof_generation(files[2], 512,500,200,10)
+#time_proof_generation(files[3], 512,600,240,10)
+# time_proof_generation(files[0], 512,50,20,10)
+    filesize=[10**2, 10**3, 10**4, 10**5, 10**6]
+    times=[0.0007976055145263672, 0.005676794052124024, 0.04509317874908447,0.2185814380645752 ,5.177749228477478]
+
+
+    plt.plot(filesize,times, color="blue")
+    plt.xlabel("File size (bytes)")
+    plt.ylabel("Time (s)")
+
+    plt.title("Proof generation with 40% of blocks \n for different file sizes")
+    plt.savefig("proof_generation_timevsfilesize.png")
+
+plot_proof_gen_time_vs_file_size()

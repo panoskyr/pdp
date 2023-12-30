@@ -199,7 +199,7 @@ class E_PDP():
             tmp=pow(g_s,self.to_digit(block),N)
             g_prod=pow(g_prod*tmp,1,N)
         rho=self.hash_number(g_prod)
-        print(rho)
+        # print(rho)
         return (T,rho)
 
     def check_proof(self,pk,sk,V,chal):
@@ -223,7 +223,7 @@ class E_PDP():
 
         rho=self.hash_number(t_s)
 
-        print(rho)
+        # print(rho)
 
 
     def tagblock(self,sk,pk,block,i):
