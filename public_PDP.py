@@ -197,14 +197,14 @@ class Public_PDP():
             g_prod=pow(g_prod*tmp,1,N)
         rho=self.hash_number(g_prod)
         print(rho)
-        return (T,rho)
+        return (T,rho),coefs
 
-    def check_proof(self,pk,sk,V,chal):
+    def check_proof(self,pk,sk,V,coefs,chal):
         indices_of_blocks,s=chal
         N,g=pk
         e,d,v=sk
         T,rho=V
-        coefs=[random.getrandbits(512) for i in indices_of_blocks]
+        coefs=coefs
 
         # t= T^e modN and ed congruent 1 modN
         t=pow(T,e,N)
@@ -282,7 +282,8 @@ def test(filepath,key_size, number_of_blocks, number_of_chals):
     pk, sk=pdp.rsa_key()
     pdp.tagfile(filepath,number_of_blocks,pk,sk)
     chal=pdp.gen_challenge(pk,number_of_chals)
-    V=pdp.gen_proof(pk,chal)
-    pdp.check_proof(pk,sk,V,chal)
+    V,coefs=pdp.gen_proof(pk,chal)
+    pdp.check_proof(pk,sk,V,coefs,chal)
 
+test("as.txt",512,20,10)
 
