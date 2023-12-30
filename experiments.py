@@ -106,6 +106,23 @@ def time_create_replica(filepath,key_size,number_of_blocks):
     elapsed_time=end_time-start_time
     print("Time to create a replica: " ,elapsed_time)
 
+def time_create_challenge(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=Public_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    start_time=time.time() 
+    for chal in range(num_challenges):
+        pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+    end_time=time.time()
+
+    elapsed_time=end_time-start_time
+
+    time_per_chal=elapsed_time / num_challenges
+    print("Time to generate {} challenges: {}".format(num_challenges, elapsed_time))
+    print("Time per challenge: ", time_per_chal)
 
 
 number_of_blocks=[10, 100,1000]
@@ -117,8 +134,14 @@ import os
 #  use sys.set_int_max_str_digits() to increase the limit
 files=["fs/100_bytes.txt", "fs/1000_bytes.txt","fs/10000_bytes.txt"]
 
-for file,num_of_blocks in zip(files,number_of_blocks):
-    print(file,num_of_blocks)
-    time_create_replica(file,512,num_of_blocks)
+# for file,num_of_blocks in zip(files,number_of_blocks):
+#     print(file,num_of_blocks)
+#     time_create_replica(file,512,num_of_blocks)
+
+
+# time_create_challenge("fs/10000_bytes.txt",512,1000, 400,100)
+
+
+
 
 

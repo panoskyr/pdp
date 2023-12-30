@@ -121,7 +121,7 @@ class Public_PDP():
 
     def gen_challenge(self,pk,num_of_chals):
         N,g=pk
-        num_of_blocks=self.get_num_of_blocks("tags.txt")
+        num_of_blocks=self.get_num_of_blocks(self.tagspath)
 
 
         c=num_of_chals
