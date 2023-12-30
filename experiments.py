@@ -142,8 +142,9 @@ def time_create_proof(filepath,key_size,number_of_blocks,challenge_blocks, num_c
     
     elapsed_time=sum(times)
     time_per_proof=elapsed_time / num_challenges
-    print("Time to generate {} challenges: {}".format(num_challenges, elapsed_time))
-    print("Time per challenge: ", time_per_proof)
+    print("Time to generate {} proofs: {}".format(num_challenges, elapsed_time))
+    print("Time per proof generation for S-PDP: ", time_per_proof)
+    return time_per_proof
 
 
 number_of_blocks=[10, 100,1000]
@@ -161,9 +162,36 @@ files=["fs/100_bytes.txt", "fs/1000_bytes.txt","fs/10000_bytes.txt"]
 
 
 # time_create_challenge("fs/10000_bytes.txt",512,1000, 400,100)
-time_create_proof("fs/10000_bytes.txt",512,1000, 400,100)
+# time_create_proof("fs/100000_bytes.txt",512,400, 400,10)
+def plot_proof_time_per_block():
+    # times=[]
+    # blocks=[]
+    # for num_blocks in range(500,10000,500):
+    #     blocks.append(num_blocks)
+    #     times.append(time_create_proof("fs/100000_bytes.txt",512,num_blocks, 400,5))
+        
+    # print (times)
+    # print(blocks)
 
 
+    times=[1.4669550895690917, 1.006958532333374, 0.8640816688537598, 0.7885423183441163, 0.7152153968811035, 0.7220099925994873, 0.673245620727539, 0.6510652065277099, 0.6850062370300293, 0.6391323566436767, 0.7058959484100342, 0.6457850456237793, 0.6586476802825928, 0.6600796222686768, 0.6086238384246826, 0.6399340152740478, 0.6492188930511474, 0.6720044136047363, 0.6474973678588867]
+    blocks=[500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500]
+    blocksize=[100000// b for b in blocks]
+
+    plt.plot(blocksize,times)
+
+    plt.xlabel("Block size (bytes)")
+    plt.ylabel("Proof generation time (s)")
+    plt.title("Proof generation time vs Block size")
+    plt.legend()
+
+    plt.savefig("Blocksize_proof_time.png")
+
+
+plot_proof_time_per_block()
+
+
+# 
 
 
 
