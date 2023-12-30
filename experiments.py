@@ -198,7 +198,7 @@ def time_tradeoff_preprocessing_proofgen(filepath,key_size,challenge_blocks):
     proofgen_times=[]
 
 
-    for num_blocks in range(10000,500,-500):
+    for num_blocks in range(500,50,-100):
         blocks.append(num_blocks)
         t1=time.time()
         pdp.tagfile(filepath,num_blocks,pk,sk)
@@ -227,3 +227,17 @@ def plot_tradeoff_preprocessing_proofgen():
     numblocks=[10000, 9500, 9000, 8500, 8000, 7500, 7000, 6500, 6000, 5500, 5000, 4500, 4000, 3500, 3000, 2500, 2000, 1500, 1000]
     blocksize=[100000/b for b in numblocks]
 
+
+    plt.plot(blocksize,proofgen_times,color="red", label="Proof Generation time (s)")
+    plt.plot(blocksize,preprocessing_times,color="blue", label="Preprocessing time (s)")
+
+    plt.xlabel("Block size (bytes)")
+    plt.ylabel("Time (s)")
+    plt.title("Tradeoff between Proof Generation and Preprocessing time \nfor different block sizes")
+    plt.legend()
+
+    plt.savefig("tradeoff_for_dif_block_sizes.png")
+
+# plot_tradeoff_preprocessing_proofgen()
+
+time_tradeoff_preprocessing_proofgen("fs/1000000_bytes.txt",512 ,50)
