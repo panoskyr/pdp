@@ -106,6 +106,8 @@ def time_create_replica(filepath,key_size,number_of_blocks):
     elapsed_time=end_time-start_time
     print("Time to create a replica: " ,elapsed_time)
 
+
+
 number_of_blocks=[10, 100,1000]
 import os
 # folderpath="fs/"
