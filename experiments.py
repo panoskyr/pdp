@@ -187,11 +187,43 @@ def plot_proof_time_per_block():
 
     plt.savefig("Blocksize_proof_time.png")
 
+def time_tradeoff_preprocessing_proofgen(filepath,key_size,challenge_blocks):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=Public_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
 
-plot_proof_time_per_block()
+    preprocessing_times=[]
+    blocks=[]
+    proofgen_times=[]
 
 
-# 
+    for num_blocks in range(10000,500,-500):
+        blocks.append(num_blocks)
+        t1=time.time()
+        pdp.tagfile(filepath,num_blocks,pk,sk)
+        t2=time.time()
+        elapsed_time=t2-t1
 
+        preprocessing_times.append(elapsed_time)
+        print(num_blocks," tagged file")
+        chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+        start_time=time.time() 
+        pdp.gen_proof(pk,chal)
+        end_time=time.time()
 
+        elapsed_time=end_time-start_time
+        proofgen_times.append(elapsed_time)
+        print(num_blocks, "challenge done")
+
+    print(preprocessing_times)
+    print(blocks)
+    print(proofgen_times)
+
+def plot_tradeoff_preprocessing_proofgen():
+# time_tradeoff_preprocessing_proofgen("fs/100000_bytes.txt",512 ,400)
+    preprocessing_times=[81.36914443969727, 71.64296078681946, 66.43421936035156, 58.37679576873779, 53.05766320228577, 46.72343564033508, 41.005367279052734, 36.23488116264343, 31.41566252708435, 26.709068298339844, 23.630056619644165, 19.73828101158142, 16.32840895652771, 13.046043157577515, 9.976933479309082, 7.963518142700195, 6.43603777885437, 4.3269031047821045, 2.9445297718048096]
+    proofgen_times=[0.5956690311431885, 0.5920383930206299, 0.5951406955718994, 0.5979886054992676, 0.6002893447875977, 0.6031191349029541, 0.6208312511444092, 0.6224358081817627, 0.6123216152191162, 0.6323070526123047, 0.6467475891113281, 0.648059606552124, 0.6442465782165527, 0.6526796817779541, 0.6776039600372314, 0.6997809410095215, 0.7470924854278564, 0.8229777812957764, 0.937746524810791]
+    numblocks=[10000, 9500, 9000, 8500, 8000, 7500, 7000, 6500, 6000, 5500, 5000, 4500, 4000, 3500, 3000, 2500, 2000, 1500, 1000]
+    blocksize=[100000/b for b in numblocks]
 
