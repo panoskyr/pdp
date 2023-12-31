@@ -94,4 +94,44 @@ def plot_proof_gen_time_vs_file_size():
     plt.title("Proof generation with 40% of blocks \n for different file sizes")
     plt.savefig("proof_generation_timevsfilesize.png")
 
-plot_proof_gen_time_vs_file_size()
+
+def time_proof_checking(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=E_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    times=[]
+    for _ in range(num_challenges):
+        chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+        V=pdp.gen_proof(pk,chal)
+
+        start_time=time.time()
+        pdp.check_proof(pk,sk,V,chal)
+        end_time=time.time()
+        times.append(end_time-start_time)
+
+    elapsed_time=sum(times)
+    time_per_check_proof=elapsed_time / num_challenges
+    print("Time to generate {} proofs: {}".format(num_challenges, elapsed_time))
+    print("Time per proof checking for E-PDP: ", time_per_check_proof)
+    return time_per_check_proof
+    
+
+def trial_time_proof_checking():
+    # when possible do 400 blocks for challenge as in original paper
+    # proof_checking_e_pdp.png
+    key_size=512
+    runs=10
+    trials=[[files[0],512,50,50,runs],
+    [files[1],512,500,400,runs],
+    [files[2], 512, 500, 400,runs],
+    [files[3], 512, 500, 400, runs],
+    [files[4], 512, 600, 400, runs]]
+    times=[]
+    for trial in reversed(trials):
+        times.append(time_proof_checking(*trial))
+    print(times)
+
+trial_time_proof_checking()
