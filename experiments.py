@@ -154,7 +154,7 @@ import os
 # we have to adjust for the number of blocks because otherwise we get the following error
 # ValueError: Exceeds the limit (4300) for integer string conversion: value has 23674 digits;
 #  use sys.set_int_max_str_digits() to increase the limit
-files=["fs/100_bytes.txt", "fs/1000_bytes.txt","fs/10000_bytes.txt"]
+files=["fs/100_bytes.txt", "fs/1000_bytes.txt","fs/10000_bytes.txt","fs/100000_bytes.txt","fs/1000000_bytes.txt"]
 
 # for file,num_of_blocks in zip(files,number_of_blocks):
 #     print(file,num_of_blocks)
@@ -241,3 +241,109 @@ def plot_tradeoff_preprocessing_proofgen():
 # plot_tradeoff_preprocessing_proofgen()
 
 # time_tradeoff_preprocessing_proofgen("fs/1000000_bytes.txt",512 ,50)
+    
+
+
+def time_proof_checking(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=Public_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    times=[]
+    for _ in range(num_challenges):
+        chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+        V,coefs=pdp.gen_proof(pk,chal)
+
+        start_time=time.time()
+        pdp.check_proof(pk,sk,V,coefs,chal)
+        end_time=time.time()
+        times.append(end_time-start_time)
+
+    elapsed_time=sum(times)
+    time_per_check_proof=elapsed_time / num_challenges
+    print("Time to generate {} proofs: {}".format(num_challenges, elapsed_time))
+    print("Time per proof checking for S-PDP: ", time_per_check_proof)
+    return time_per_check_proof
+
+def trial_time_proof_checking():
+    # when possible do 400 blocks for challenge as in original paper
+    # proof_checking_e_pdp.png
+    key_size=512
+    runs=10
+    trials=[[files[0],512,100,100,runs],
+    [files[1],512,500,400,runs],
+    [files[2], 512, 500, 400,runs],
+    [files[3], 512, 500, 400, runs],
+    [files[4], 512, 600, 400, runs]]
+    times=[]
+    for trial in trials:
+        times.append(time_proof_checking(*trial))
+    return times
+
+def plot_check_proof_time():
+    check_proof_times=trial_time_proof_checking()
+    filesize=[10**2, 10**3, 10**4, 10**5, 10**6]
+    num_blocks=[100,500,500,500,600]
+
+    block_size_in_bytes=[a//b for a,b in zip(filesize,num_blocks)]
+
+    l=len(block_size_in_bytes)
+    plt.plot(block_size_in_bytes,[check_proof_times[0]]*l,label="100 (only 100 challenges)")
+    plt.plot(block_size_in_bytes,[check_proof_times[1]]*l,label="1000")
+    plt.plot(block_size_in_bytes,[check_proof_times[2]]*l,label="10000")
+    plt.plot(block_size_in_bytes,[check_proof_times[3]]*l,label="100000")
+    plt.plot(block_size_in_bytes,[check_proof_times[4]]*l,label="1000000")
+
+    plt.xlabel("File size (bytes)")
+    plt.ylabel("Time (s)")
+    plt.legend()
+
+
+    plt.title("S-PDP:CheckProof time for 400 blocks per challenge \nfor different file sizes ")
+    plt.savefig("spdp_proof_check_time_vs_bytes_in_challenge.png")
+
+
+def time_proof_checking_for_comparison(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=Public_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+
+    tag_time_start=time.time()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+    tag_time_end=time.time()
+
+    gen_chal_time_start=time.time()
+    chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+    gen_chal_time_end=time.time()
+
+    gen_proof_time_start=time.time()
+    V, coefs=pdp.gen_proof(pk,chal)
+    gen_proof_time_end=time.time()
+
+    check_proof_time_start=time.time()
+    pdp.check_proof(pk,sk,V,coefs,chal)
+    check_proof_time_end=time.time()
+
+    tag_time=tag_time_end-tag_time_start
+    gen_chal_time=gen_chal_time_end-gen_chal_time_start
+    gen_proof_time=gen_proof_time_end-gen_proof_time_start
+    check_proof_time=check_proof_time_end-check_proof_time_start
+
+    return [tag_time,gen_chal_time, gen_proof_time,check_proof_time]
+from e_pdp_experiments import print_avg_from_trials
+def compare_trials_comparison():
+    trial=[files[3], 512, 500, 400,10]
+    print(trial[0])
+    time_trials=[]
+    for i in range(10):
+        time_trials.append(time_proof_checking_for_comparison(*trial))
+    print(time_trials)
+    print_avg_from_trials(time_trials)
+
+
+compare_trials_comparison()
+

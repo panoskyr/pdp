@@ -124,14 +124,91 @@ def trial_time_proof_checking():
     # proof_checking_e_pdp.png
     key_size=512
     runs=10
-    trials=[[files[0],512,50,50,runs],
+    trials=[[files[0],512,100,100,runs],
     [files[1],512,500,400,runs],
     [files[2], 512, 500, 400,runs],
     [files[3], 512, 500, 400, runs],
     [files[4], 512, 600, 400, runs]]
     times=[]
-    for trial in reversed(trials):
+    for trial in trials:
         times.append(time_proof_checking(*trial))
     print(times)
 
-trial_time_proof_checking()
+def plot_check_proof_time_epdp():
+    check_proof_times=[0.014735984802246093, 0.014516353607177734, 0.014137744903564453, 0.014367508888244628, 0.003717803955078125]
+    check_proof_times_asc=check_proof_times[::-1]
+    filesize=[10**2, 10**3, 10**4, 10**5, 10**6]
+    num_blocks=[100,500,500,500,600]
+
+    block_size_in_bytes=[a//b for a,b in zip(filesize,num_blocks)]
+
+    l=len(block_size_in_bytes)
+    plt.plot(block_size_in_bytes,[check_proof_times_asc[0]]*l,label="100 (only 100 challenges)")
+    plt.plot(block_size_in_bytes,[check_proof_times_asc[1]]*l,label="1000")
+    plt.plot(block_size_in_bytes,[check_proof_times_asc[2]]*l,label="10000")
+    plt.plot(block_size_in_bytes,[check_proof_times_asc[3]]*l,label="100000")
+    plt.plot(block_size_in_bytes,[check_proof_times_asc[4]]*l,label="1000000")
+
+    plt.xlabel("File size (bytes)")
+    plt.ylabel("Time (s)")
+    plt.legend()
+
+
+    plt.title("CheckProof time for 400 blocks per challenge \nfor different file sizes ")
+    plt.savefig("proof_check_time_vs_bytes_in_challenge.png")
+    
+def time_proof_checking_for_comparison(filepath,key_size,number_of_blocks,challenge_blocks, num_challenges):
+    filename, extension=os.path.splitext(filepath)
+    tagspath=filename+ "_tags"+extension
+    pdp=E_PDP(filepath=filepath,tagspath=tagspath, key_size=key_size)
+    pk,sk=pdp.rsa_key()
+    tag_time_start=time.time()
+    pdp.tagfile(filepath,number_of_blocks,pk,sk)
+    tag_time_end=time.time()
+
+    gen_chal_time_start=time.time()
+    chal=pdp.gen_challenge(pk,num_of_chals=challenge_blocks)
+    gen_chal_time_end=time.time()
+
+    gen_proof_time_start=time.time()
+    V=pdp.gen_proof(pk,chal)
+    gen_proof_time_end=time.time()
+
+    check_proof_time_start=time.time()
+    pdp.check_proof(pk,sk,V,chal)
+    check_proof_time_end=time.time()
+
+    tag_time=tag_time_end-tag_time_start
+    gen_chal_time=gen_chal_time_end-gen_chal_time_start
+    gen_proof_time=gen_proof_time_end-gen_proof_time_start
+    check_proof_time=check_proof_time_end-check_proof_time_start
+
+    return [tag_time,gen_chal_time, gen_proof_time,check_proof_time]
+
+
+
+def compare_trials_comparison():
+    trial=[files[3], 512, 500, 400,10]
+    time_trials=[]
+    for i in range(10):
+        time_trials.append(time_proof_checking_for_comparison(*trial))
+    print(time_trials)
+# trials=[[1.0603930950164795, 0.00029754638671875, 0.11113238334655762, 0.014624595642089844], [1.034226655960083, 0.00026345252990722656, 0.11201643943786621, 0.017019987106323242], [0.9397141933441162, 0.0002682209014892578, 0.10011601448059082, 0.014503717422485352], [1.0192842483520508, 0.0002646446228027344, 0.10857653617858887, 0.014707326889038086], [0.949462890625, 0.0002617835998535156, 0.10524582862854004, 0.014547586441040039], [0.9486091136932373, 0.00026106834411621094, 0.10635542869567871, 0.014729976654052734], [1.0043368339538574, 0.00032520294189453125, 0.10454654693603516, 0.014475584030151367], [1.0523738861083984, 0.0002624988555908203, 0.11185145378112793, 0.01454472541809082], [0.9445037841796875, 0.0002601146697998047, 0.10436272621154785, 0.014287948608398438], [0.9741437435150146, 0.000354766845703125, 0.10868048667907715, 0.014751672744750977]]
+    print_avg_from_trials(time_trials)
+
+
+def print_avg_from_trials(trials):
+    time_categories = list(map(list, zip(*trials)))
+
+    avg_tag_time = sum(time_categories[0]) / len(time_categories[0])
+    avg_gen_chal_time = sum(time_categories[1]) / len(time_categories[1])
+    avg_gen_proof_time = sum(time_categories[2]) / len(time_categories[2])
+    avg_check_proof_time = sum(time_categories[3]) / len(time_categories[3])
+
+    print(f"Average Tag Time: {avg_tag_time}")
+    print(f"Average Generate Challenge Time: {avg_gen_chal_time}")
+    print(f"Average Generate Proof Time: {avg_gen_proof_time}")
+    print(f"Average Check Proof Time: {avg_check_proof_time}")
+
+
+compare_trials_comparison()
