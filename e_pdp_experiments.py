@@ -188,8 +188,9 @@ def time_proof_checking_for_comparison(filepath,key_size,number_of_blocks,challe
 
 
 def compare_trials_comparison():
-    trial=[files[3], 512, 500, 400,10]
+    trial=[files[4], 512, 600, 400,10]
     time_trials=[]
+    print(trial[0])
     for i in range(10):
         time_trials.append(time_proof_checking_for_comparison(*trial))
     print(time_trials)

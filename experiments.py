@@ -336,14 +336,16 @@ def time_proof_checking_for_comparison(filepath,key_size,number_of_blocks,challe
     return [tag_time,gen_chal_time, gen_proof_time,check_proof_time]
 from e_pdp_experiments import print_avg_from_trials
 def compare_trials_comparison():
-    trial=[files[3], 512, 500, 400,10]
+    trial=[files[4], 512, 600, 400,10]
     print(trial[0])
     time_trials=[]
-    for i in range(10):
-        time_trials.append(time_proof_checking_for_comparison(*trial))
-    print(time_trials)
+    # for i in range(10):
+        # time_trials.append(time_proof_checking_for_comparison(*trial))
+    time_trials.append(time_proof_checking_for_comparison(*trial))
+    
+    print(time_trials+"S-PDP")
     print_avg_from_trials(time_trials)
+    print("S-PDP")
 
 
 compare_trials_comparison()
-
